@@ -94,6 +94,33 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
   const fileInputRef = useRef(null);
   const router = useRouter();
 
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+      if (data.url && editor) {
+        editor.chain().focus().setImage({ src: data.url }).run();
+        console.log("Image successfully uploaded and inserted:", data.url);
+      }
+    } catch (error) {
+      console.error("Image upload error:", error);
+      alert("Image upload failed.");
+    }
+  };
+
   const editor = useEditor({
     extensions: [ 
       StarterKit.configure({
@@ -347,7 +374,7 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
    
       {/* Desktop MenuBar */}
       <div className="hidden md:block relative z-50 mb-4">
-        <MenuBar editor={editor} />
+        <MenuBar editor={editor} onImageUpload={handleImageUpload} />
       </div>
       
       {/* Editor Container */}
@@ -363,6 +390,7 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
         <MenuBar 
           editor={editor} 
           isMobile={true}
+          onImageUpload={handleImageUpload}
         />
       </div>
       

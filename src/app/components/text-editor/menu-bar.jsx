@@ -23,23 +23,20 @@ function Toggle({ pressed, onPressedChange, children, className, title, isMobile
   );
 }
 
-export default function MenuBar({ editor, isMobile = false }) {
+export default function MenuBar({ editor, isMobile = false, onImageUpload }) {
   const fileInputRef = useRef(null);
   const [isHeadingOpen, setIsHeadingOpen] = useState(false);
   const [isImageOpen, setIsImageOpen] = useState(false);
 
-  const handleFileUpload = (e) => {
+  const handleFileChange = (e) => {
     const file = e.target.files?.[0];
-    if (!file || !editor) return;
+    if (file && onImageUpload) {
+      onImageUpload(file);
+    }
+  };
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result;
-      if (typeof dataUrl === 'string') {
-        editor.chain().focus().setImage({ src: dataUrl }).run();
-      }
-    };
-    reader.readAsDataURL(file);
+  const triggerImageUpload = () => {
+    fileInputRef.current?.click();
   };
 
   if (!editor) return null;
@@ -253,12 +250,12 @@ export default function MenuBar({ editor, isMobile = false }) {
                   </button>
                   <button
                     onClick={() => {
-                      fileInputRef.current?.click();
+                      triggerImageUpload();
                       setIsImageOpen(false);
                     }}
                     className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 rounded-b-lg"
                   >
-                    Upload File
+                    Upload from Computer
                   </button>
                 </div>
               </>
@@ -268,7 +265,7 @@ export default function MenuBar({ editor, isMobile = false }) {
               type="file"
               accept="image/*"
               ref={fileInputRef}
-              onChange={handleFileUpload}
+              onChange={handleFileChange}
               className="hidden"
             />
           </div>
@@ -436,12 +433,12 @@ export default function MenuBar({ editor, isMobile = false }) {
               </button>
               <button
                 onClick={() => {
-                  fileInputRef.current?.click();
+                  triggerImageUpload();
                   setIsImageOpen(false);
                 }}
                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 rounded-b-lg"
               >
-                Upload File
+                Upload from Computer
               </button>
             </div>
           </>
@@ -451,7 +448,7 @@ export default function MenuBar({ editor, isMobile = false }) {
           type="file"
           accept="image/*"
           ref={fileInputRef}
-          onChange={handleFileUpload}
+          onChange={handleFileChange}
           className="hidden"
         />
       </div>
