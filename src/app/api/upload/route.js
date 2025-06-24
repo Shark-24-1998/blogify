@@ -10,21 +10,18 @@ export async function POST(req) {
   }
 
   const externalApiFormData = new FormData();
-  // The external API expects the field name to be 'files'
-  externalApiFormData.append("files", file);
+  externalApiFormData.append("files", file); // field name must be "files"
 
   try {
     const apiRes = await fetch("https://writers.explorethebuzz.com/api/upload", {
       method: "POST",
       body: externalApiFormData,
-      // Add Authorization headers here if needed, e.g.:
       // headers: {
-      //   'Authorization': `Bearer ${process.env.YOUR_API_TOKEN}`
-      // }
+      //   Authorization: `Bearer ${process.env.YOUR_API_KEY}`, // if needed
+      // },
     });
 
     if (!apiRes.ok) {
-      // Forward the error from the external API
       const errorText = await apiRes.text();
       return new Response(JSON.stringify({ error: `API Error: ${errorText}` }), {
         status: apiRes.status,
@@ -33,18 +30,18 @@ export async function POST(req) {
     }
 
     const data = await apiRes.json();
+    console.log("Full response from external API:", data);
 
-    // The response is an array, get the URL from the first element
-    if (Array.isArray(data) && data.length > 0 && data[0].url) {
+    if (Array.isArray(data) && data.length > 0 && data[0].url && data[0].name) {
       const imageUrl = "https://writers.explorethebuzz.com" + data[0].url;
-      console.log("Successfully uploaded image. URL:", imageUrl);
-      return new Response(JSON.stringify({ url: imageUrl }), {
+      const imageName =  data[0].hash + data[0].ext;
+
+      return new Response(JSON.stringify({ url: imageUrl, name: imageName }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
     } else {
-      // Handle unexpected response format
-      console.error("Upload failed: Invalid response format from external API.", data);
+      console.error("Invalid response format:", data);
       return new Response(
         JSON.stringify({ error: "Invalid response format from external API." }),
         {
@@ -63,4 +60,4 @@ export async function POST(req) {
       }
     );
   }
-} 
+}

@@ -18,7 +18,7 @@ function Toggle({ pressed, onPressedChange, children, className, title, isMobile
       } ${className}`}
       title={title}
     >
-      {children}
+      {children} 
     </button>
   );
 }
@@ -29,9 +29,9 @@ export default function MenuBar({ editor, isMobile = false, onImageUpload }) {
   const [isImageOpen, setIsImageOpen] = useState(false);
 
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file && onImageUpload) {
-      onImageUpload(file);
+    const files = Array.from(e.target.files);
+    if (files.length && onImageUpload) {
+      onImageUpload(files);
     }
   };
 
@@ -264,6 +264,7 @@ export default function MenuBar({ editor, isMobile = false, onImageUpload }) {
             <input
               type="file"
               accept="image/*"
+              multiple
               ref={fileInputRef}
               onChange={handleFileChange}
               className="hidden"
@@ -447,6 +448,7 @@ export default function MenuBar({ editor, isMobile = false, onImageUpload }) {
         <input
           type="file"
           accept="image/*"
+          multiple
           ref={fileInputRef}
           onChange={handleFileChange}
           className="hidden"

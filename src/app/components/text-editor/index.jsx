@@ -94,30 +94,35 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
   const fileInputRef = useRef(null);
   const router = useRouter();
 
-  const handleImageUpload = async (file) => {
-    if (!file) return;
+  const handleImageUpload = async (files) => {
+    if (!files || files.length === 0) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      try {
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!response.ok) {
-        throw new Error("Upload failed");
+        if (!response.ok) {
+          throw new Error("Upload failed");
+        }
+
+        const data = await response.json();
+        if (data.url && editor) {
+          // Move cursor to end before inserting image
+          editor.chain().focus().setTextSelection(editor.state.doc.content.size).run();
+          editor.chain().focus().setImage({ src: data.url }).run();
+          console.log("Image uploaded:", data.url);
+          console.log("Image name (ID):", data.name);
+        }
+      } catch (error) {
+        console.error("Image upload error:", error);
+        alert("Image upload failed.");
       }
-
-      const data = await response.json();
-      if (data.url && editor) {
-        editor.chain().focus().setImage({ src: data.url }).run();
-        console.log("Image successfully uploaded and inserted:", data.url);
-      }
-    } catch (error) {
-      console.error("Image upload error:", error);
-      alert("Image upload failed.");
     }
   };
 
