@@ -10,6 +10,8 @@ import PreviewModal from './preview-modal';
 import { collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { db } from "@/app/utils/firebsae";
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import CustomImageNode from './CustomImageNode';
 
 const AuthorSection = ({ authorName, setAuthorName, authorImage, fileInputRef, handleAuthorImageUpload }) => {
   const triggerFileInput = (e) => {
@@ -115,7 +117,10 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
         if (data.url && editor) {
           // Move cursor to end before inserting image
           editor.chain().focus().setTextSelection(editor.state.doc.content.size).run();
-          editor.chain().focus().setImage({ src: data.url }).run();
+          editor.chain().focus().setImage({ 
+            src: data.url,
+            'data-id': data.id  // Add the image ID as a data attribute
+          }).run();
           console.log("Image uploaded:", data.url);
           console.log("Image name (ID):", data.name);
         }
@@ -145,13 +150,31 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
       TextAlign.configure({ 
         types: ["heading", "paragraph"] 
       }),
-      Image.configure({
+      Image.extend({
+        addNodeView() {
+          return ReactNodeViewRenderer(CustomImageNode);
+        },
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            'data-id': {
+              default: null,
+              parseHTML: element => element.getAttribute('data-id'),
+              renderHTML: attributes => {
+                if (!attributes['data-id']) {
+                  return {};
+                }
+                return {
+                  'data-id': attributes['data-id'],
+                };
+              },
+            },
+          };
+        },
+      }).configure({
         HTMLAttributes: {
           class: "mx-auto my-4 rounded-lg shadow-md",
-          style: "max-width: calc(100% - 2rem); height: auto; display: block;",
         },
-        allowBase64: false,
-        inline: false,
       }),
     ],
     content,
