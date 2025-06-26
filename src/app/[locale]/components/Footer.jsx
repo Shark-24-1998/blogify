@@ -1,7 +1,10 @@
 import {  Mail, Phone, MapPin, Github, Twitter, Linkedin, Instagram } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const t = useTranslations('footer');
+  const tHeader = useTranslations('header');
 
   return (
     <footer className="bg-gradient-to-b from-white to-gray-50 border-t border-gray-200/60">
@@ -17,7 +20,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-gray-600 text-sm leading-relaxed mb-4">
-              Creating beautiful, modern web experiences with cutting-edge technology and thoughtful design.
+              {t('brandDescription')}
             </p>
             
             {/* Social Media Links */}
@@ -31,29 +34,29 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div className="sm:col-span-1">
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">Quick Links</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">{t('quickLinks')}</h3>
             <ul className="space-y-3">
-              <FooterLink href="/" text="Home" />
-              <FooterLink href="/about" text="About Us" />
-              <FooterLink href="/blog" text="Blog" />
-              <FooterLink href="/create-post" text="Create Post" />
+              <FooterLink href="/" text={tHeader('home')} />
+              <FooterLink href="/about" text={t('aboutUs')} />
+              <FooterLink href="/blog" text={tHeader('blog')} />
+              <FooterLink href="/create-post" text={tHeader('create-post')} />
             </ul>
           </div>
 
           {/* Legal */}
           <div className="sm:col-span-1">
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">Legal</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">{t('legal')}</h3>
             <ul className="space-y-3">
-              <FooterLink href="/privacy" text="Privacy Policy" />
-              <FooterLink href="/terms" text="Terms of Service" />
-              <FooterLink href="/cookies" text="Cookie Policy" />
-              <FooterLink href="/contact" text="Contact" />
+              <FooterLink href="/privacy" text={t('privacyPolicy')} />
+              <FooterLink href="/terms" text={t('termsOfService')} />
+              <FooterLink href="/cookies" text={t('cookiePolicy')} />
+              <FooterLink href="/contact" text={tHeader('contact')} />
             </ul>
           </div>
 
           {/* Contact Info */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">Get in Touch</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">{t('getInTouch')}</h3>
             <div className="space-y-3">
               <ContactItem icon={<Mail size={16} />} text="hello@blogify.com" />
               <ContactItem icon={<Phone size={16} />} text="+1 (555) 123-4567" />

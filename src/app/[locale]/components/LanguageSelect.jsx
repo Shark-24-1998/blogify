@@ -8,7 +8,7 @@ const LanguageSelect = () => {
   const pathname = usePathname();
   const [language, setLanguage] = useState('');
 
-  const availableLocales = ['en', 'fr', 'de'];
+  const availableLocales = ['en', 'hi', 'es', 'fr'];
 
   useEffect(() => {
     const currentLocale = pathname.split('/')[1];
@@ -33,15 +33,16 @@ const LanguageSelect = () => {
 
   return (
     <>
-    <h4 className="hover:text-black">Language</h4>
+    
     <select
       className="border rounded px-2 py-1 hover:text-black"
       value={language}
       onChange={handleChange}
     >
       <option value="en">English</option>
+      <option value="hi">Hindi</option>
+      <option value="es">Español</option>
       <option value="fr">Français</option>
-      <option value="de">Dutch</option>
     </select>
     </>
     

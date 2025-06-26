@@ -1,0 +1,19 @@
+{
+    "header" :{
+        "home": "होम",
+        "about": "परिचय",
+        "contact": "संपर्क करें",
+        "create-post": "पोस्ट बनाएँ",
+        "blog": "ब्लॉग"
+    },
+    "footer": {
+      "brandDescription": "आधुनिक और सुंदर वेब अनुभवों का निर्माण अत्याधुनिक तकनीक और विचारशील डिज़ाइन के साथ।",
+      "quickLinks": "त्वरित लिंक",
+      "aboutUs": "हमारे बारे में",
+      "legal": "कानूनी",
+      "privacyPolicy": "गोपनीयता नीति",
+      "termsOfService": "सेवा की शर्तें",
+      "cookiePolicy": "कुकी नीति",
+      "getInTouch": "संपर्क में रहें"
+    }
+}

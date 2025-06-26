@@ -1,0 +1,19 @@
+{
+    "header": {
+        "home": "Accueil",
+        "about": "À propos",
+        "contact": "Contact",
+        "create-post": "Créer un article",
+        "blog": "Blog"
+    },
+    "footer": {
+      "brandDescription": "Créer des expériences web modernes et magnifiques avec une technologie de pointe et un design réfléchi.",
+      "quickLinks": "Liens rapides",
+      "aboutUs": "À propos de nous",
+      "legal": "Mentions légales",
+      "privacyPolicy": "Politique de confidentialité",
+      "termsOfService": "Conditions d'utilisation",
+      "cookiePolicy": "Politique de cookies",
+      "getInTouch": "Contactez-nous"
+    }
+}

@@ -9,7 +9,7 @@ import MenuBar from "./menu-bar";
 import PreviewModal from './preview-modal';
 import { collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { db } from "@/app/utils/firebsae";
+import { db } from "@/app/[locale]/utils/firebsae";
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import CustomImageNode from './CustomImageNode';
 

@@ -1,0 +1,19 @@
+{
+    "header" :{
+        "home" : "Home",
+        "about" : "About",
+        "contact" : "Contact",
+        "create-post" : "Create Post",
+        "blog" : "Blog"
+    },
+    "footer": {
+      "brandDescription": "Creating beautiful, modern web experiences with cutting-edge technology and thoughtful design.",
+      "quickLinks": "Quick Links",
+      "aboutUs": "About Us",
+      "legal": "Legal",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "cookiePolicy": "Cookie Policy",
+      "getInTouch": "Get in Touch"
+    }
+}

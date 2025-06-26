@@ -1,0 +1,19 @@
+{
+    "header": {
+        "home": "Inicio",
+        "about": "Acerca de",
+        "contact": "Contacto",
+        "create-post": "Crear Publicación",
+        "blog": "Blog"
+    },
+    "footer": {
+      "brandDescription": "Creando experiencias web modernas y hermosas con tecnología de vanguardia y diseño reflexivo.",
+      "quickLinks": "Enlaces rápidos",
+      "aboutUs": "Sobre nosotros",
+      "legal": "Legal",
+      "privacyPolicy": "Política de privacidad",
+      "termsOfService": "Términos de servicio",
+      "cookiePolicy": "Política de cookies",
+      "getInTouch": "Ponte en contacto"
+    }
+}

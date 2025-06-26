@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import AuthMenu from './auth/AuthMenu';
 import { useAuthModal } from './auth/AuthModalContext';
 import { useAuth } from './auth/AuthProvider';
+import {useTranslations} from 'next-intl';
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -17,7 +18,7 @@ export default function Header() {
   const router = useRouter();
   const { openSignIn, openSignUp } = useAuthModal();
   const { user, logOut } = useAuth();
-
+  const t = useTranslations("header")
   // Update scroll behavior
   useEffect(() => {
     const handleScroll = () => {
@@ -78,28 +79,31 @@ export default function Header() {
             <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">Blogify</span>
           </Link>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            className="md:hidden flex items-center justify-center w-10 h-10 text-gray-700 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 mobile-menu-container"
-            onClick={(e) => {
-              e.stopPropagation();
-              setMenuOpen(!menuOpen);
-            }}
-          >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-          
+          {/* Mobile Menu Toggle and Language Selector (mobile only, right side) */}
+          <div className="flex items-center md:hidden gap-2">
+            <LanguageSelect />
+            <button
+              className="flex items-center justify-center w-10 h-10 text-gray-700 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 mobile-menu-container"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen(!menuOpen);
+              }}
+            >
+              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
-            <NavLink href="/" icon={<Home size={16} />} text='home' />
-            <NavLink href="/about" icon={<Info size={16} />} text='about' />
-            <NavLink href="/contact" icon={<Mail size={16} />} text='contact' />
+            <NavLink href="/" icon={<Home size={16} />} text={t('home')} />
+            <NavLink href="/about" icon={<Info size={16} />} text={t('about')} />
+            <NavLink href="/contact" icon={<Mail size={16} />} text={t('contact')} />
             <NavLink 
               href="/create-post" 
               icon={<Edit size={16} />} 
-              text="Create Post" 
+              text={t('create-post')} 
             />
-            <NavLink href="/blog" icon={<BookOpen size={16} />} text="Blog" />
+            <NavLink href="/blog" icon={<BookOpen size={16} />} text={t('blog')} />
             <div className="ml-2 pl-2 border-l border-gray-200">
               <LanguageSelect />
             </div>
@@ -128,7 +132,7 @@ export default function Header() {
         <div 
           className={`absolute right-0 top-0 h-full w-[300px] bg-white/95 backdrop-blur-sm shadow-2xl transition-all duration-500 ease-in-out transform ${
             menuOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
+          } mobile-menu-container`}
         >
           {/* Menu header */}
           <div className="sticky top-0 flex items-center justify-between p-4 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
@@ -193,19 +197,19 @@ export default function Header() {
                     <MobileNavLink 
                       href="/" 
                       icon={<Home size={18} />} 
-                      text='home' 
+                      text={t('home')} 
                       onClick={() => setMenuOpen(false)} 
                     />
                     <MobileNavLink 
                       href="/about" 
                       icon={<Info size={18} />} 
-                      text='about' 
+                      text={t('about')} 
                       onClick={() => setMenuOpen(false)} 
                     />
                     <MobileNavLink 
                       href="/contact" 
                       icon={<Mail size={18} />} 
-                      text='contact' 
+                      text={t('contact')} 
                       onClick={() => setMenuOpen(false)} 
                     />
                   </div>
@@ -220,13 +224,13 @@ export default function Header() {
                     <MobileNavLink 
                       href="/blog" 
                       icon={<BookOpen size={18} />} 
-                      text="Blog" 
+                      text={t('blog')} 
                       onClick={() => setMenuOpen(false)} 
                     />
                     <MobileNavLink 
                       href="/create-post" 
                       icon={<Edit size={18} />} 
-                      text="Create Post" 
+                      text={t('create-post')} 
                       onClick={() => setMenuOpen(false)} 
                     />
                   </div>
