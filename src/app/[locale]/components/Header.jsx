@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import LanguageSelect from './LanguageSelect';
 import { Menu, X, Home, Info, Mail, Edit, BookOpen, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -15,10 +15,14 @@ export default function Header() {
   const [showHeader, setShowHeader] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showMobileMenuContent, setShowMobileMenuContent] = useState(true);
+  const [prevScrollY, setPrevScrollY] = useState(0);
   const router = useRouter();
   const { openSignIn, openSignUp } = useAuthModal();
   const { user, logOut } = useAuth();
   const t = useTranslations("header")
+  // Add ref for menu content
+  const menuContentRef = useRef(null);
+
   // Update scroll behavior
   useEffect(() => {
     const handleScroll = () => {
@@ -38,6 +42,23 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Scroll menu content to top when menu opens
+  useEffect(() => {
+    if (menuOpen) {
+      setPrevScrollY(window.scrollY);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      if (menuContentRef.current) {
+        menuContentRef.current.scrollTop = 0;
+      }
+    }
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) {
+      window.scrollTo({ top: prevScrollY, behavior: 'instant' });
+    }
+  }, [menuOpen, prevScrollY]);
 
   // Close mobile menu when clicking outside
   useEffect(() => {
@@ -134,143 +155,147 @@ export default function Header() {
             menuOpen ? 'translate-x-0' : 'translate-x-full'
           } mobile-menu-container`}
         >
-          {/* Menu header */}
-          <div className="sticky top-0 flex items-center justify-between p-4 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
-            <div className="flex items-center space-x-3">
-              {user ? (
-                <>
-                  <SidebarAvatar user={user} />
-                  <div className="flex flex-col">
-                    <p className="text-sm font-medium text-gray-900">{user.email}</p>
-                    <button
-                      className="mt-1 text-xs text-red-600 hover:underline text-left"
-                      onClick={() => {
-                        logOut();
-                        setMenuOpen(false);
-                      }}
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
-                    <User size={20} className="text-gray-500" />
-                  </div>
-                  <div className="flex flex-col">
-                    <p className="text-sm font-medium text-gray-900">Guest User</p>
-                  </div>
-                </>
-              )}
-            </div>
-            {scrolled && (
-              <div className="flex-1 text-center">
-                <span className="text-xl font-bold text-gray-900">
-                  <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">Blogify</span>
-                </span>
+          {/* Refactored: Make header sticky and content scrollable */}
+          <div className="flex flex-col h-full">
+            {/* Menu header */}
+            <div className="sticky top-0 flex items-center justify-between p-4 border-b border-gray-100 bg-white/95 backdrop-blur-sm z-10">
+              <div className="flex items-center space-x-3">
+                {user ? (
+                  <>
+                    <SidebarAvatar user={user} />
+                    <div className="flex flex-col">
+                      <p className="text-sm font-medium text-gray-900">{user.email}</p>
+                      <button
+                        className="mt-1 text-xs text-red-600 hover:underline text-left"
+                        onClick={() => {
+                          logOut();
+                          setMenuOpen(false);
+                        }}
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+                      <User size={20} className="text-gray-500" />
+                    </div>
+                    <div className="flex flex-col">
+                      <p className="text-sm font-medium text-gray-900">Guest User</p>
+                    </div>
+                  </>
+                )}
               </div>
-            )}
-            <button
-              onClick={() => setMenuOpen(false)}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors ml-2"
+              {scrolled && (
+                <div className="flex-1 text-center">
+                  <span className="text-xl font-bold text-gray-900">
+                    <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">Blogify</span>
+                  </span>
+                </div>
+              )}
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors ml-2"
+              >
+                <X size={20} className="text-gray-600" />
+              </button>
+            </div>
+            {/* Menu content (scrollable) */}
+            <div
+              ref={menuContentRef}
+              className={`flex-1 overflow-y-auto transition-all duration-300 ease-in-out ${
+                showMobileMenuContent 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 -translate-y-4 pointer-events-none'
+              }`}
             >
-              <X size={20} className="text-gray-600" />
-            </button>
-          </div>
-
-          {/* Menu content */}
-          <div className={`transition-all duration-300 ease-in-out h-[calc(100vh-64px)] overflow-y-auto ${
-            showMobileMenuContent 
-              ? 'opacity-100 translate-y-0' 
-              : 'opacity-0 -translate-y-4 pointer-events-none'
-          }`}
-          >
-            <div className="py-6 px-4">
-              <nav className="flex flex-col gap-8">
-                {/* Main Menu */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
-                    Main Menu
-                  </h3>
-                  <div className="flex flex-col gap-2">
-                    <MobileNavLink 
-                      href="/" 
-                      icon={<Home size={18} />} 
-                      text={t('home')} 
-                      onClick={() => setMenuOpen(false)} 
-                    />
-                    <MobileNavLink 
-                      href="/about" 
-                      icon={<Info size={18} />} 
-                      text={t('about')} 
-                      onClick={() => setMenuOpen(false)} 
-                    />
-                    <MobileNavLink 
-                      href="/contact" 
-                      icon={<Mail size={18} />} 
-                      text={t('contact')} 
-                      onClick={() => setMenuOpen(false)} 
-                    />
+              <div className="py-6 px-4">
+                <nav className="flex flex-col gap-8">
+                  {/* Main Menu */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
+                      Main Menu
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      <MobileNavLink 
+                        href="/" 
+                        icon={<Home size={18} />} 
+                        text={t('home')} 
+                        onClick={() => setMenuOpen(false)} 
+                      />
+                      <MobileNavLink 
+                        href="/about" 
+                        icon={<Info size={18} />} 
+                        text={t('about')} 
+                        onClick={() => setMenuOpen(false)} 
+                      />
+                      <MobileNavLink 
+                        href="/contact" 
+                        icon={<Mail size={18} />} 
+                        text={t('contact')} 
+                        onClick={() => setMenuOpen(false)} 
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Blog Menu */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
-                    Blog
-                  </h3>
-                  <div className="flex flex-col gap-2">
-                    <MobileNavLink 
-                      href="/blog" 
-                      icon={<BookOpen size={18} />} 
-                      text={t('blog')} 
-                      onClick={() => setMenuOpen(false)} 
-                    />
-                    <MobileNavLink 
-                      href="/create-post" 
-                      icon={<Edit size={18} />} 
-                      text={t('create-post')} 
-                      onClick={() => setMenuOpen(false)} 
-                    />
+                  {/* Blog Menu */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
+                      Blog
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      <MobileNavLink 
+                        href="/blog" 
+                        icon={<BookOpen size={18} />} 
+                        text={t('blog')} 
+                        onClick={() => setMenuOpen(false)} 
+                      />
+                      <MobileNavLink 
+                        href="/create-post" 
+                        icon={<Edit size={18} />} 
+                        text={t('create-post')} 
+                        onClick={() => setMenuOpen(false)} 
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Auth Section */}
-                <div className="space-y-3 mt-4">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
-                    Account
-                  </h3>
-                  <div className="flex flex-col gap-2">
-                    {!user && (
-                      <>
-                        <button
-                          className="w-full flex items-center justify-center px-4 py-2.5 text-sm font-medium text-blue-600 border border-blue-600 bg-white hover:bg-blue-50 rounded-md shadow transition-all"
-                          onClick={handleMobileSignIn}
-                        >
-                          Sign In
-                        </button>
-                        <button
-                          className="w-full flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow transition-all"
-                          onClick={handleMobileSignUp}
-                        >
-                          Sign Up
-                        </button>
-                      </>
-                    )}
+                  {/* Auth Section */}
+                  <div className="space-y-3 mt-4">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
+                      Account
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      {!user && (
+                        <>
+                          <button
+                            className="w-full flex items-center justify-center px-4 py-2.5 text-sm font-medium text-blue-600 border border-blue-600 bg-white hover:bg-blue-50 rounded-md shadow transition-all"
+                            onClick={handleMobileSignIn}
+                          >
+                            Sign In
+                          </button>
+                          <button
+                            className="w-full flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow transition-all"
+                            onClick={handleMobileSignUp}
+                          >
+                            Sign Up
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Language Selector */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
-                    Language
-                  </h3>
-                  <div className="px-3">
-                    <LanguageSelect />
+                  {/* Language Selector */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
+                      Language
+                    </h3>
+                    <div className="px-3">
+                      <LanguageSelect />
+                    </div>
                   </div>
-                </div>
-              </nav>
+                </nav>
+              </div>
             </div>
           </div>
         </div>

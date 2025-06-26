@@ -1,17 +1,19 @@
 'use client'
 import { NodeViewWrapper } from '@tiptap/react';
 import { Trash2 } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 export default function CustomImageNode(props) {
   const { node, deleteNode } = props;
   const imageId = node.attrs['data-id'];
   const src = node.attrs.src;
+  const pathname = usePathname();
+  const locale = pathname.split('/')[1];
 
   const handleDelete = async () => {
     if (!imageId) return alert('No image ID found!');
-    
     try {
-      const res = await fetch(`/api/upload?id=${imageId}`, { 
+      const res = await fetch(`/${locale}/api/upload?id=${imageId}`, { 
         method: 'DELETE'
       });
       const data = await res.json();

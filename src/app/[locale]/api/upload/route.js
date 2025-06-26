@@ -16,14 +16,18 @@ export async function POST(req) {
     const apiRes = await fetch("https://writers.explorethebuzz.com/api/upload", {
       method: "POST",
       body: externalApiFormData,
-      // headers: {
-      //   Authorization: `Bearer ${process.env.YOUR_API_KEY}`, // if needed
-      // },
+      headers: {
+        Authorization: `Bearer ${process.env.EXTERNAL_API_KEY}`,
+      },
     });
 
+    // Log status and response body for debugging
+    const debugText = await apiRes.clone().text();
+    console.log('External API status:', apiRes.status);
+    console.log('External API response body:', debugText);
+
     if (!apiRes.ok) {
-      const errorText = await apiRes.text();
-      return new Response(JSON.stringify({ error: `API Error: ${errorText}` }), {
+      return new Response(JSON.stringify({ error: `API Error: ${debugText}` }), {
         status: apiRes.status,
         headers: { "Content-Type": "application/json" },
       });
@@ -79,21 +83,32 @@ export async function DELETE(req) {
   }
 
   try {
-    // Call your external API to delete the image by ID
-    const apiRes = await fetch(`https://writers.explorethebuzz.com/api/upload/${imageId}`, {
+    const apiRes = await fetch(`https://writers.explorethebuzz.com/api/upload/files/${imageId}`, {
       method: "DELETE",
-      // headers: { Authorization: `Bearer ${process.env.YOUR_API_KEY}` }, // if needed
+      headers: {
+        Authorization: `Bearer ${process.env.EXTERNAL_API_KEY}`,
+      },
     });
 
+    const contentType = apiRes.headers.get("content-type");
+    const responseText = await apiRes.text();
+    console.log("External API DELETE status:", apiRes.status);
+    console.log("External API DELETE response body:", responseText);
+
     if (!apiRes.ok) {
-      const errorText = await apiRes.text();
-      return new Response(JSON.stringify({ error: `API Error: ${errorText}` }), {
+      return new Response(JSON.stringify({ error: `API Error: ${responseText}` }), {
         status: apiRes.status,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    // Only try to parse as JSON if the response is JSON
+    let data = null;
+    if (contentType && contentType.includes("application/json")) {
+      data = JSON.parse(responseText);
+    }
+
+    return new Response(JSON.stringify({ success: true, data }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
