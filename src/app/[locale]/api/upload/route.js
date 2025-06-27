@@ -13,7 +13,7 @@ export async function POST(req) {
   externalApiFormData.append("files", file); // field name must be "files"
 
   try {
-    const apiRes = await fetch("https://writers.explorethebuzz.com/api/upload", {
+    const apiRes = await fetch("https://writers.explorethebuzz.com/api/upload?files", {
       method: "POST",
       body: externalApiFormData,
       headers: {

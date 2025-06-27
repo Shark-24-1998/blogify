@@ -51,7 +51,12 @@ export default function Header() {
       if (menuContentRef.current) {
         menuContentRef.current.scrollTop = 0;
       }
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.body.classList.remove('overflow-hidden');
     }
+    // Clean up in case the component unmounts while menu is open
+    return () => document.body.classList.remove('overflow-hidden');
   }, [menuOpen]);
 
   useEffect(() => {
