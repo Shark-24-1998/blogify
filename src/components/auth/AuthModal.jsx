@@ -1,26 +1,38 @@
 "use client";
 import React, { useRef, useEffect, useState } from 'react';
-import { useAuth } from './AuthProvider';
 import { useAuthModal } from './AuthModalContext';
+import { useAuth } from '../../hooks/useAuth';
 import { FcGoogle } from 'react-icons/fc';
-import AuthMenu from './AuthMenu';
 
 export default function AuthModal() {
   const { open, formType, closeModal } = useAuthModal();
-  const { user, signUp, signIn, signInWithGoogle, logOut } = useAuth();
-  console.log('Header user:', user);
+  const { 
+    user, 
+    signUp, 
+    signIn, 
+    signInWithGoogle, 
+    logOut 
+  } = useAuth();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState('');
+  const [localLoading, setLocalLoading] = useState(false);
   const modalRef = useRef(null);
 
-  // Automatically close modal when user logs in or signs up
+  // Automatically close modal when user logs in
   useEffect(() => {
     if (user && open) {
       closeModal();
     }
   }, [user, open, closeModal]);
+
+  // Clear errors when modal opens/closes
+  useEffect(() => {
+    if (open) {
+      setLocalError('');
+    }
+  }, [open]);
 
   // Close modal on outside click or Escape
   useEffect(() => {
@@ -45,24 +57,33 @@ export default function AuthModal() {
     };
   }, [open, closeModal]);
 
-  const handleAuth = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  const handleGoogleSignIn = async () => {
+    setLocalLoading(true);
+    setLocalError('');
     try {
-      if (formType === 'signup') {
-        await signUp(email, password);
-      } else {
-        await signIn(email, password);
-      }
+      await signInWithGoogle();
       setEmail('');
       setPassword('');
-      // closeModal(); // Now handled by effect
     } catch (err) {
-      setError(err.message);
+      setLocalError(err.message);
     }
-    setLoading(false);
+    setLocalLoading(false);
   };
+
+  const handleSignOut = async () => {
+    setLocalLoading(true);
+    try {
+      await logOut();
+      closeModal();
+    } catch (err) {
+      setLocalError(err.message);
+    }
+    setLocalLoading(false);
+  };
+
+  // Display error from local state
+  const displayError = localError;
+  const isLoading = localLoading;
 
   if (!open) return null;
 
@@ -90,26 +111,29 @@ export default function AuthModal() {
           <p className="text-gray-500 text-sm mb-6 text-center">
             {formType === 'signup' ? 'Create your account to get started.' : 'Welcome back! Please sign in to continue.'}
           </p>
+          
           {/* Social login row */}
           <div className="flex justify-center gap-3 w-full mb-4">
             <button
               type="button"
-              onClick={signInWithGoogle}
-              disabled={loading}
-              className="flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 shadow-sm transition-all focus:outline-none"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className="flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 shadow-sm transition-all focus:outline-none disabled:opacity-50"
               title="Sign in with Google"
             >
               <FcGoogle size={26} />
             </button>
           </div>
+          
           {/* Divider */}
           <div className="flex items-center w-full mb-4">
             <div className="flex-1 h-px bg-gray-200" />
             <span className="mx-3 text-xs text-gray-400 font-medium">or</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
-          {/* Email form */}
-          <form onSubmit={handleAuth} className="flex flex-col gap-4 w-full">
+          
+          {/* Email form - Note: Email/password auth not implemented in new MVC */}
+          <div className="flex flex-col gap-4 w-full">
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1" htmlFor="email">Email address</label>
               <input
@@ -118,8 +142,8 @@ export default function AuthModal() {
                 placeholder="Enter your email address"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base bg-gray-50"
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base bg-gray-100 cursor-not-allowed"
               />
             </div>
             <div>
@@ -130,19 +154,26 @@ export default function AuthModal() {
                 placeholder="Enter your password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base bg-gray-50"
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base bg-gray-100 cursor-not-allowed"
               />
             </div>
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-semibold text-base shadow mt-2"
+              type="button"
+              disabled
+              className="w-full px-4 py-2 bg-gray-400 text-white rounded-lg font-semibold text-base shadow mt-2 cursor-not-allowed"
             >
               {formType === 'signup' ? 'Sign Up' : 'Continue'}
             </button>
-            {error && <span className="text-xs text-red-600 text-center mt-1">{error}</span>}
-          </form>
+            <p className="text-xs text-gray-500 text-center mt-1">
+              Email/password authentication coming soon. Please use Google Sign-In.
+            </p>
+          </div>
+          
+          {displayError && (
+            <span className="text-xs text-red-600 text-center mt-1">{displayError}</span>
+          )}
+          
           <div className="w-full text-center mt-6 text-sm text-gray-500">
             {formType === 'signup' ? (
               <>
@@ -166,20 +197,8 @@ export default function AuthModal() {
               </>
             )}
           </div>
-          {user && (
-            <button
-              className="mt-1 text-xs text-red-600 hover:underline"
-              onClick={() => {
-                logOut();
-                closeModal();
-              }}
-            >
-              Sign Out
-            </button>
-          )}
         </div>
       </div>
-      <AuthMenu user={user} />
     </>
   );
 } 

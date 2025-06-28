@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from './AuthProvider';
+import { useAuth } from '../../hooks/useAuth';
 import { useAuthModal } from './AuthModalContext';
 
 export default function AuthMenu() {

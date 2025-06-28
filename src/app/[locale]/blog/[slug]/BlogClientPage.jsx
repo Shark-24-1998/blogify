@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { BiLike, BiDislike } from "react-icons/bi";
 import { FaRegComment } from "react-icons/fa";
-import CommentsSidebar from "../../components/Comments";
-import ShareMenu from "../../components/ShareMenu";
+import CommentsSidebar from "@/components/Comments";
+import ShareMenu from "@/components/ShareMenu";
 
 export default function BlogClientPage({ blog }) {
   const [likes, setLikes] = useState(blog.likes || 0);

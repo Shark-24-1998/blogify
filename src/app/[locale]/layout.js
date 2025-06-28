@@ -1,10 +1,10 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "./components/Header";
-import FooterWrapper from "./components/FooterWrapper";
-import { AuthProvider } from './components/auth/AuthProvider';
-import { AuthModalProvider } from './components/auth/AuthModalContext';
-import AuthModal from './components/auth/AuthModal';
+import Header from "@/components/Header";
+import FooterWrapper from "@/components/FooterWrapper";
+import { AuthProvider } from '@/hooks/useAuth';
+import { AuthModalProvider } from '@/components/auth/AuthModalContext';
+import AuthModal from '@/components/auth/AuthModal';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';

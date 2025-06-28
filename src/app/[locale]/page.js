@@ -1,8 +1,8 @@
 import Image from 'next/image';
-import BlogShowcaseSection from './components/BlogSection';
-import TrustPartner from './components/TrustPartner';
-import WritersSection from './components/WriterSection';
-import Offer from './components/Offer';
+import BlogShowcaseSection from '@/components/BlogSection';
+import TrustPartner from '@/components/TrustPartner';
+import WritersSection from '@/components/WriterSection';
+import Offer from '@/components/Offer';
 
 export default function Home() {
   return (

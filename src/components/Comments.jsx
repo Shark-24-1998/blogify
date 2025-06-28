@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "./auth/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 import AuthRequiredModal from "./auth/AuthRequiredModal";
 
 export default function CommentsSidebar({ isOpen, onClose, comments, addComment }) {

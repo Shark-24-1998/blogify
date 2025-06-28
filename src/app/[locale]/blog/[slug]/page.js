@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import BlogClientPage from "./BlogClientPage";
-import { generateSeo } from "../../utils/seoGenerator";
+import { generateSeo } from "../../../../utils/seoGenerator";
 
 // Dummy blog data
 const blogs = [

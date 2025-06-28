@@ -2,6 +2,7 @@
 import { NodeViewWrapper } from '@tiptap/react';
 import { Trash2 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useImageDelete } from '@/hooks/useImageDelete';
 
 export default function CustomImageNode(props) {
   const { node, deleteNode } = props;
@@ -9,23 +10,15 @@ export default function CustomImageNode(props) {
   const src = node.attrs.src;
   const pathname = usePathname();
   const locale = pathname.split('/')[1];
+  
+  const { deleteImage, isDeleting, deleteError } = useImageDelete();
 
   const handleDelete = async () => {
     if (!imageId) return alert('No image ID found!');
-    try {
-      const res = await fetch(`/${locale}/api/upload?id=${imageId}`, { 
-        method: 'DELETE'
-      });
-      const data = await res.json();
-      
-      if (data.success) {
-        deleteNode();
-      } else {
-        alert('Failed to delete image: ' + (data.error || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Error deleting image:', error);
-      alert('Failed to delete image. Please try again.');
+    
+    const success = await deleteImage({ imageId, deleteNode });
+    if (!success && deleteError) {
+      alert(deleteError);
     }
   };
 
@@ -39,12 +32,18 @@ export default function CustomImageNode(props) {
       <button
         type="button"
         onClick={handleDelete}
+        disabled={isDeleting}
         className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white border border-gray-200 
                  rounded-full cursor-pointer shadow-sm opacity-0 group-hover:opacity-100 
-                 transition-opacity duration-200 hover:border-red-300 hover:text-red-500"
+                 transition-opacity duration-200 hover:border-red-300 hover:text-red-500
+                 disabled:opacity-50 disabled:cursor-not-allowed"
         title="Delete image"
       >
-        <Trash2 size={16} />
+        {isDeleting ? (
+          <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <Trash2 size={16} />
+        )}
       </button>
     </NodeViewWrapper>
   );

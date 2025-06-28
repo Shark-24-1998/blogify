@@ -6,7 +6,7 @@ import { Menu, X, Home, Info, Mail, Edit, BookOpen, List, User } from 'lucide-re
 import { useRouter, useParams } from 'next/navigation';
 import AuthMenu from './auth/AuthMenu';
 import { useAuthModal } from './auth/AuthModalContext';
-import { useAuth } from './auth/AuthProvider';
+import { useAuth } from '../hooks/useAuth';
 import { useTranslations } from 'next-intl';
 
 export default function Header() {

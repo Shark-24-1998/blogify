@@ -1,10 +1,9 @@
 "use client"
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getAllDrafts, getAllPublishedPosts, deleteDraftById } from "../components/text-editor/mvc/model";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { CheckCircle, Loader, List } from "lucide-react";
+import { usePosts } from "@/hooks/usePosts";
+import { CheckCircle, Loader, Edit, Trash2 } from "lucide-react";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -12,52 +11,87 @@ function formatDate(dateStr) {
   return d.toLocaleDateString("en-GB"); // DD/MM/YYYY
 }
 
-export default function AllPostsPage() {
+function AllPostsContent() {
   const { locale } = useParams();
-  const [drafts, setDrafts] = useState([]);
-  const [published, setPublished] = useState([]);
-  const [userEmail, setUserEmail] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
+  const { 
+    sortedPosts,
+    isLoading, 
+    deletingId, 
+    error, 
+    deletePost 
+  } = usePosts();
 
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserEmail(user.email);
-      } else {
-        setUserEmail(null);
-        setDrafts([]);
-        setPublished([]);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    async function fetchData() {
-      const [draftsData, publishedData] = await Promise.all([
-        getAllDrafts(),
-        getAllPublishedPosts()
-      ]);
-      setDrafts(draftsData);
-      setPublished(publishedData);
-    }
-    fetchData();
-  }, []);
-
-  // Handler to delete a draft
-  async function handleDeleteDraft(id) {
-    if (!window.confirm("Are you sure you want to delete this draft?")) return;
-    setDeletingId(id);
-    try {
-      await deleteDraftById(id);
-      setDrafts((prev) => prev.filter((draft) => draft.id !== id));
-    } catch (err) {
-      alert("Failed to delete draft.");
-    } finally {
-      setDeletingId(null);
-    }
-  }
+  const renderPostCard = (post) => {
+    const isPublished = post.status === 'published';
+    const isDraft = post.status === 'draft';
+    const date = isPublished ? post.createdAt : post.savedAt;
+    
+    return (
+      <div
+        key={post.id}
+        className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-gray-100"
+        style={{ 
+          borderLeft: isPublished ? "4px solid #22c55e" : "4px solid #2563eb" 
+        }}
+      >
+        <div className="flex-1">
+          <div className="text-base sm:text-lg font-semibold text-gray-900">
+            {post.title}
+          </div>
+          <div className="text-xs sm:text-sm text-gray-500 mt-1">
+            By {post.authorName} &middot; {formatDate(date)}
+            {isDraft && (
+              <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                Draft
+              </span>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex gap-2 mt-4 sm:mt-0 items-center">
+          <Link
+            href={`/${locale}/blog/${post.slug || post.id}`}
+            className="px-4 sm:px-5 py-2 rounded-lg bg-gray-100 text-blue-600 font-medium hover:bg-blue-50 transition text-sm sm:text-base"
+          >
+            View
+          </Link>
+          
+          <Link
+            href={`/${locale}/create-post?postid=${post.id}`}
+            className="px-4 sm:px-5 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition text-sm sm:text-base flex items-center gap-1"
+          >
+            <Edit className="w-4 h-4" />
+            Edit
+          </Link>
+          
+          <button
+            onClick={() => deletePost(post.id)}
+            disabled={deletingId === post.id}
+            className="px-4 sm:px-5 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition text-sm sm:text-base flex items-center gap-2"
+          >
+            {deletingId === post.id ? (
+              <>
+                <Loader className="animate-spin w-4 h-4" />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </>
+            )}
+          </button>
+          
+          {isPublished && (
+            <span className="flex items-center gap-1 text-green-600 font-medium ml-2">
+              <CheckCircle className="w-4 h-4" />
+              Published
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen max-w-4xl mx-auto pt-20 sm:pt-24 pb-24 px-2 sm:px-4">
@@ -73,85 +107,27 @@ export default function AllPostsPage() {
         </Link>
       </div>
 
-      {!userEmail ? (
-        <div className="text-center text-gray-400 py-20 text-lg">
-          Please log in to see your drafts.
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          {error}
         </div>
-      ) : (
+      )}
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="text-center py-20">
+          <Loader className="animate-spin w-8 h-8 mx-auto text-gray-400 mb-4" />
+          <p className="text-gray-500">Loading posts...</p>
+        </div>
+      )}
+
+      {!isLoading && (
         <div className="flex flex-col gap-6">
-          {/* Published Posts */}
-          {published.map((post) => (
-            <div
-              key={post.id}
-              className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-gray-100"
-              style={{ borderLeft: "4px solid #22c55e" }} // green accent for published
-            >
-              <div>
-                <div className="text-base sm:text-lg font-semibold text-gray-900">{post.title}</div>
-                <div className="text-xs sm:text-sm text-gray-500 mt-1">
-                  By {post.authorName} &middot; {formatDate(post.createdAt)}
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4 sm:mt-0 items-center">
-                <Link
-                  href={`/${locale}/blog/${post.slug || post.id}`}
-                  className="px-4 sm:px-5 py-2 rounded-lg bg-gray-100 text-blue-600 font-medium hover:bg-blue-50 transition text-sm sm:text-base"
-                >
-                  View
-                </Link>
-                <span className="flex items-center gap-1 text-green-600 font-medium ml-2">
-                  <CheckCircle className="w-4 h-4" />
-                  Published
-                </span>
-              </div>
-            </div>
-          ))}
+          {/* Posts List */}
+          {sortedPosts.map(renderPostCard)}
 
-          {/* Drafts */}
-          {drafts.map((post) => (
-            <div
-              key={post.id}
-              className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-gray-100"
-              style={{ borderLeft: "4px solid #2563eb" }}
-            >
-              <div>
-                <div className="text-base sm:text-lg font-semibold text-gray-900">{post.title}</div>
-                <div className="text-xs sm:text-sm text-gray-500 mt-1">
-                  By {post.authorName} &middot; {formatDate(post.savedAt)}
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4 sm:mt-0">
-                <Link
-                  href={`/${locale}/blog/${post.slug || post.id}`}
-                  className="px-4 sm:px-5 py-2 rounded-lg bg-gray-100 text-blue-600 font-medium hover:bg-blue-50 transition text-sm sm:text-base"
-                >
-                  View
-                </Link>
-                <Link
-                  href={`/${locale}/create-post?postid=${post.id}`}
-                  className="px-4 sm:px-5 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition text-sm sm:text-base"
-                >
-                  Edit
-                </Link>
-                <button
-                  onClick={() => handleDeleteDraft(post.id)}
-                  disabled={deletingId === post.id}
-                  className="px-4 sm:px-5 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition text-sm sm:text-base flex items-center gap-2"
-                >
-                  {deletingId === post.id ? (
-                    <>
-                      <Loader className="animate-spin w-4 h-4" />
-                      Deleting...
-                    </>
-                  ) : (
-                    "Delete"
-                  )}
-                </button>
-              </div>
-            </div>
-          ))}
-
-          {drafts.length === 0 && published.length === 0 && (
+          {sortedPosts.length === 0 && !isLoading && (
             <div className="text-center text-gray-400 py-20 text-lg">
               No posts found.
             </div>
@@ -159,5 +135,13 @@ export default function AllPostsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AllPostsPage() {
+  return (
+    <ProtectedRoute message="You must be signed in to view your posts.">
+      <AllPostsContent />
+    </ProtectedRoute>
   );
 }

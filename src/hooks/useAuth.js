@@ -1,9 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '../../utils/firebsae';
+import { auth } from '../utils/firebsae';
 import { onAuthStateChanged } from 'firebase/auth';
-import { signUp, signIn, signInWithGoogle, logOut } from '../../utils/auth';
+import { signUp, signIn, signInWithGoogle, logOut } from '../utils/auth';
 
 const AuthContext = createContext();
 

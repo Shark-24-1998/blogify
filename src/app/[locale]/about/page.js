@@ -7,8 +7,8 @@ import {
   FaLock 
 } from 'react-icons/fa';
 import Link from 'next/link';
-import BlogShowcaseSection from '../components/BlogSection';
-import AnimatedCounter from '../components/AnimatedCounter';
+import BlogShowcaseSection from '@/components/BlogSection';
+import AnimatedCounter from '@/components/AnimatedCounter';
 
 
 
