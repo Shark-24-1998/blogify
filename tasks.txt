@@ -1,0 +1,25 @@
+# POSTS Crud - new route all posts
+//  create post button => which redirect to create post
+//// if you have only sent html data than how can you edit later.  
+// All Posts 
+// Click post => update post 
+// delete post 
+
+# Individual Post Crud => Create-Post?postid={postid}
+// read and set post to editor 
+// delete post 
+// update 
+// save as draft button = save post in firestore with status: draft
+
+# Create post 
+// save as draft which is store data in firestore
+// Create-Post?postid={postid} should load that post data 
+
+// MVC 
+
+# start with text editor component
+
+// model => api callers => upload image function , post controllers
+// view ui => keeep ui related code 
+// controller => uploading image api
+ 

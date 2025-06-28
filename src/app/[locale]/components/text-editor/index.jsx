@@ -7,11 +7,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { Save, Send, CheckCircle, AlertCircle, Upload, Eye } from "lucide-react";
 import MenuBar from "./menu-bar";
 import PreviewModal from './preview-modal';
-import { collection, addDoc } from 'firebase/firestore';
-import { useRouter, usePathname } from 'next/navigation';
-import { db } from "@/app/[locale]/utils/firebsae";
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import CustomImageNode from './CustomImageNode';
+import { handlePublish, handleSaveDraft, handleAutoSave, handleImageUpload, loadDraft } from './mvc/controller';
+
 
 const AuthorSection = ({ authorName, setAuthorName, authorImage, fileInputRef, handleAuthorImageUpload }) => {
   const triggerFileInput = (e) => {
@@ -93,46 +93,15 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('edit');
   const [authorImage, setAuthorImage] = useState(''); // Only for preview, not saved to Firestore
+  const [imageUploading, setImageUploading] = useState(false);
   const fileInputRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
   const locale = pathname.split('/')[1]; // e.g., 'en', 'es', etc.
+  const searchParams = useSearchParams();
+  const initialPostid = searchParams.get('postid');
+  const [postid, setPostid] = useState(initialPostid);
 
-  const handleImageUpload = async (files) => {
-    if (!files || files.length === 0) return;
-
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const response = await fetch(`/${locale}/api/upload`, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error("Upload failed");
-        }
-
-        const data = await response.json();
-        if (data.url && editor) {
-          // Move cursor to end before inserting image
-          editor.chain().focus().setTextSelection(editor.state.doc.content.size).run();
-          editor.chain().focus().setImage({ 
-            src: data.url,
-            'data-id': data.id  // Add the image ID as a data attribute
-          }).run();
-          console.log("Image uploaded:", data.url);
-          console.log("Image name (ID):", data.name);
-        }
-      } catch (error) {
-        console.error("Image upload error:", error);
-        alert("Image upload failed.");
-      }
-    }
-  };
-  
   const editor = useEditor({
     extensions: [ 
       StarterKit.configure({
@@ -206,145 +175,8 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
     },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
-      // Auto-save after 2 seconds of inactivity
-      clearTimeout(window.autoSaveTimeout);
-      window.autoSaveTimeout = setTimeout(() => {
-        handleAutoSave();
-      }, 2000);
     },
   });
-
-  // Auto-save functionality
-  const handleAutoSave = async () => {
-    if (!editor || (!title.trim() && !editor.getText().trim())) return;
-    
-    setSaveStatus("saving");
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Save only text data, no images
-      const postData = {
-        title: title.trim(),
-        content: editor.getHTML(),
-        authorName: authorName.trim(),
-        status: 'draft',
-        updatedAt: new Date().toISOString()
-      };
-      
-      console.log('Auto-saving draft:', postData);
-      setSaveStatus("saved");
-      
-      // Clear status after 3 seconds
-      setTimeout(() => setSaveStatus(""), 3000);
-    } catch (error) {
-      console.error('Auto-save failed:', error);
-      setSaveStatus("error");
-      setTimeout(() => setSaveStatus(""), 3000);
-    }
-  };
-
-  // Manual save draft
-  const handleSaveDraft = async () => {
-    if (!editor) return;
-    
-    setSaveStatus("saving");
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Save only text data, no images
-      const postData = {
-        title: title.trim() || 'Untitled Draft',
-        content: editor.getHTML(),
-        authorName: authorName.trim(),
-        status: 'draft',
-        savedAt: new Date().toISOString()
-      };
-      
-      console.log('Saving draft:', postData);
-      setSaveStatus("saved");
-      
-      // Clear status after 3 seconds
-      setTimeout(() => setSaveStatus(""), 3000);
-    } catch (error) {
-      console.error('Save failed:', error);
-      setSaveStatus("error");
-      setTimeout(() => setSaveStatus(""), 3000);
-    }
-  };
-
-  // Publish post - NO IMAGE STORAGE
-  const handlePublish = async () => {
-    if (!editor || !title.trim()) {
-      alert('Please add a title and content for your blog post');
-      return;
-    }
-
-    try {
-      setPublishStatus("publishing");
-
-      // Only save text data - no images
-      const postData = {
-        title: title.trim(),
-        content: editor.getHTML(),
-        authorName: authorName.trim() || 'Anonymous',
-        // authorImage: removed - not saving to Firestore
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        status: 'published',
-        readTime: Math.ceil(editor.getText().split(' ').length / 200)
-      };
-
-      const docRef = await addDoc(collection(db, "posts"), postData);
-      
-      console.log("Post published with ID: ", docRef.id);
-      setPublishStatus("published");
-      
-      // Clear status and redirect after 2 seconds
-      setTimeout(() => {
-        setPublishStatus("");
-        router.push('/blog');
-      }, 2000);
-
-    } catch (error) {
-      console.error("Error publishing post: ", error);
-      setPublishStatus("error");
-      setTimeout(() => setPublishStatus(""), 3000);
-    }
-  };
-
-  // Save post to Firestore - NO IMAGE STORAGE
-  const handleSavePost = async () => {
-    try {
-      if (!editor || !title.trim()) {
-        alert('Please add title and content');
-        return;
-      }
-
-      setSaveStatus('saving');
-
-      // Only save text data - no images
-      const postData = {
-        title: title.trim(),
-        content: editor.getHTML(),
-        authorName: authorName.trim() || 'Anonymous',
-        // authorImage: removed - not saving to Firestore
-        createdAt: new Date().toISOString(),
-      };
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Saving post with data:', postData);
-
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus(""), 3000);
-    } catch (error) {
-      console.error('Save error:', error);
-      setSaveStatus('error');
-      setTimeout(() => setSaveStatus(""), 3000);
-    }
-  };
 
   // Update the handleAuthorImageUpload handler - for preview only
   const handleAuthorImageUpload = (event) => {
@@ -378,6 +210,23 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
     };
   }, []);
 
+  useEffect(() => {
+    const fetchDraft = async () => {
+      if (postid) {
+        const draft = await loadDraft({ postid });
+        if (draft) {
+          setTitle(draft.title || "");
+          setAuthorName(draft.authorName || "");
+          if (editor && draft.content) {
+            editor.commands.setContent(draft.content);
+          }
+        }
+      }
+    };
+    fetchDraft();
+    // Only run when postid or editor changes
+  }, [postid, editor]);
+
   return (
     <div className="w-full relative pb-20 md:pb-0">
       
@@ -404,11 +253,32 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
    
       {/* Desktop MenuBar */}
       <div className="hidden md:block relative z-50 mb-4">
-        <MenuBar editor={editor} onImageUpload={handleImageUpload} />
+        <MenuBar editor={editor} onImageUpload={(files) => handleImageUpload({
+          files,
+          locale,
+          insertImage: ({ url, id }) => {
+            if (editor) {
+              editor.chain().focus().setTextSelection(editor.state.doc.content.size).run();
+              editor.chain().focus().setImage({
+                src: url,
+                'data-id': id
+              }).run();
+            }
+          },
+          setImageUploading
+        })} />
       </div>
       
       {/* Editor Container */}
       <div className="relative z-10 bg-white rounded-xl border border-gray-200/50 shadow-sm overflow-hidden">
+        {imageUploading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-xl">
+            <div className="flex flex-col items-center gap-4 p-8 bg-white/90 rounded-2xl shadow-2xl border border-blue-100 animate-fade-in">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-lg font-semibold text-blue-700 tracking-wide">Uploading image...</span>
+            </div>
+          </div>
+        )}
         <EditorContent 
           editor={editor} 
           className="min-h-[300px] md:min-h-[400px] focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-300 transition-all duration-200"
@@ -420,7 +290,20 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
         <MenuBar 
           editor={editor} 
           isMobile={true}
-          onImageUpload={handleImageUpload}
+          onImageUpload={(files) => handleImageUpload({
+            files,
+            locale,
+            insertImage: ({ url, id }) => {
+              if (editor) {
+                editor.chain().focus().setTextSelection(editor.state.doc.content.size).run();
+                editor.chain().focus().setImage({
+                  src: url,
+                  'data-id': id
+                }).run();
+              }
+            },
+            setImageUploading
+          })}
         />
       </div>
       
@@ -470,7 +353,19 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-6 gap-4 relative z-10">
         <button 
-          onClick={handleSaveDraft}
+          onClick={async () => {
+            console.log("Updating existing draft, postid type:", typeof postid, postid);
+            const newPostId = await handleSaveDraft({
+              postid,
+              title,
+              content: editor ? editor.getHTML() : '',
+              authorName,
+              setSaveStatus,
+              router,
+              setPostid,
+            });
+            if (newPostId && !postid) setPostid(newPostId);
+          }}
           disabled={saveStatus === "saving"}
           className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1"
         >
@@ -489,7 +384,14 @@ export default function TextEditor({ content = "", onChange = () => {} }) {
           </button>
           
           <button 
-            onClick={handlePublish}
+            onClick={() => handlePublish({
+              title,
+              content: editor ? editor.getHTML() : '',
+              authorName,
+              authorImage,
+              setPublishStatus,
+              router
+            })}
             disabled={publishStatus === "publishing" || !title.trim()}
             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           >

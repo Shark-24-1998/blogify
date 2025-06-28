@@ -5,7 +5,7 @@ import TextEditor from "../components/text-editor";
 import { useAuth } from "../components/auth/AuthProvider";
 import AuthRequiredModal from "../components/auth/AuthRequiredModal";
 
-export default function CreatePost() {
+export default function CreatePost({}) {
   const { user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(!user);
 

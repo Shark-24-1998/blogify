@@ -2,32 +2,29 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import LanguageSelect from './LanguageSelect';
-import { Menu, X, Home, Info, Mail, Edit, BookOpen, User } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Menu, X, Home, Info, Mail, Edit, BookOpen, List, User } from 'lucide-react';
+import { useRouter, useParams } from 'next/navigation';
 import AuthMenu from './auth/AuthMenu';
 import { useAuthModal } from './auth/AuthModalContext';
 import { useAuth } from './auth/AuthProvider';
-import {useTranslations} from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [showHeader, setShowHeader] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const [showMobileMenuContent, setShowMobileMenuContent] = useState(true);
   const [prevScrollY, setPrevScrollY] = useState(0);
   const router = useRouter();
   const { openSignIn, openSignUp } = useAuthModal();
   const { user, logOut } = useAuth();
-  const t = useTranslations("header")
-  // Add ref for menu content
+  const t = useTranslations("header");
+  const { locale } = useParams();
   const menuContentRef = useRef(null);
 
   // Update scroll behavior
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
       if (currentScrollY > 20) {
         setScrolled(true);
         setShowMobileMenuContent(false);
@@ -35,10 +32,7 @@ export default function Header() {
         setScrolled(false);
         setShowMobileMenuContent(true);
       }
-      
-      setLastScrollY(currentScrollY);
     };
-    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -55,7 +49,6 @@ export default function Header() {
     } else {
       document.body.classList.remove('overflow-hidden');
     }
-    // Clean up in case the component unmounts while menu is open
     return () => document.body.classList.remove('overflow-hidden');
   }, [menuOpen]);
 
@@ -73,13 +66,12 @@ export default function Header() {
           setMenuOpen(false);
         }
       };
-      
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [menuOpen]);
 
-  // Add these handlers:
+  // Auth handlers for mobile
   const handleMobileSignIn = () => {
     openSignIn();
     setTimeout(() => setMenuOpen(false), 200);
@@ -124,10 +116,11 @@ export default function Header() {
             <NavLink href="/" icon={<Home size={16} />} text={t('home')} />
             <NavLink href="/about" icon={<Info size={16} />} text={t('about')} />
             <NavLink href="/contact" icon={<Mail size={16} />} text={t('contact')} />
-            <NavLink 
-              href="/create-post" 
-              icon={<Edit size={16} />} 
-              text={t('create-post')} 
+            <NavLink href="/create-post" icon={<Edit size={16} />} text={t('create-post')} />
+            <NavLink
+              href={`/${locale}/allposts`}
+              icon={<List size={16} />}
+              text="All Posts"
             />
             <NavLink href="/blog" icon={<BookOpen size={16} />} text={t('blog')} />
             <div className="ml-2 pl-2 border-l border-gray-200">
@@ -160,7 +153,6 @@ export default function Header() {
             menuOpen ? 'translate-x-0' : 'translate-x-full'
           } mobile-menu-container`}
         >
-          {/* Refactored: Make header sticky and content scrollable */}
           <div className="flex flex-col h-full">
             {/* Menu header */}
             <div className="sticky top-0 flex items-center justify-between p-4 border-b border-gray-100 bg-white/95 backdrop-blur-sm z-10">
@@ -261,6 +253,12 @@ export default function Header() {
                         icon={<Edit size={18} />} 
                         text={t('create-post')} 
                         onClick={() => setMenuOpen(false)} 
+                      />
+                      <MobileNavLink
+                        href={`/${locale}/allposts`}
+                        icon={<List size={18} />}
+                        text="All Posts"
+                        onClick={() => setMenuOpen(false)}
                       />
                     </div>
                   </div>
